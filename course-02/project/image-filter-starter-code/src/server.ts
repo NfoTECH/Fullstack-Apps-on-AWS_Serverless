@@ -1,4 +1,5 @@
 import express from 'express';
+import {Request, Response} from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -34,8 +35,9 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   // Root Endpoint
   // Displays a simple message to the user
 
-  app.get( "/filteredimage", async ( req, res ) => {
-    const image_url  = req.query.image_url.toString();
+  app.get( "/filteredimage", async ( req: Request, res: Response ) => {
+    const image_url:string  = req.query.image_url.toString();
+    
     if (!image_url) {
       return res.status(400).send({ message: 'image_url is required or malformed' });
     }
