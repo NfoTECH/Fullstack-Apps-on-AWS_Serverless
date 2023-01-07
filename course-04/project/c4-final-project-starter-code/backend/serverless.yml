@@ -8,6 +8,8 @@ plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
 
 provider:
   name: aws
@@ -35,14 +37,26 @@ provider:
     # Enable API Gateway logs
     restApi: true
 
-  # iam:
-    # role:
-    #   statements:
-    #     - Effect: Allow
-    #       Action:
-    #         - xray:PutTelemetryRecords
-    #         - xray:PutTraceSegments
-    #       Resource: "*"
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - xray:PutTelemetryRecords
+            - xray:PutTraceSegments
+          Resource: "*"
+
+custom:
+  documentation:
+    api:
+      info:
+        version: 1.0.0
+        title: Serverless Todo App
+        description: This is a serverless todo app
+      models:
+        - name: CreateTodoRequest
+          contentType: application/json
+          schema: ${file(models/todo-model.json)}
 
 functions:
   hello:
@@ -58,14 +72,36 @@ functions:
 
   # TODO: Configure this function - 
   # Provide iamRoleStatements property for performing Actions on DynamoDB
-  # GetTodos:
-  #   handler: src/lambda/http/getTodos.handler
-  #   events:
-  #     - http:
-  #         method: get
-  #         path: todos
-  #         cors: true
-  #         authorizer: Auth
+  GetTodos:
+    handler: src/lambda/http/getTodos.handler
+    events:
+      - http:
+          method: get
+          path: todos
+          cors: true
+          authorizer: Auth
+          reqvalidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a todo task
+            description: Create a todo task
+            requestModels:
+              application/json: CreateTodoRequest
+    iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-get-todos-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.INDEX_NAME}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+        Resource:
+          - '*'
+
 
   # TODO: Configure this function - 
   # Provide iamRoleStatements property. Decide the Actions and AWS Resource. 
@@ -78,10 +114,7 @@ functions:
           method: post
           path: todos
           cors: true
-  #         authorizer: Auth
-  #         request:
-  #           schemas:
-  #             application/json: ${file(models/create-todo-model.json)}
+          authorizer: Auth
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -148,6 +181,15 @@ resources:
         ResponseType: DEFAULT_5XX
         RestApiId:
           Ref: ApiGatewayRestApi
+
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: RequestBodyValidator
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
     
     # TODO: Create a DynamoDB table with local secondary index and a composite key
     
