@@ -66,7 +66,7 @@ export class TodosAccess {
             },
             ReturnValues: 'ALL_NEW'
         }).promise()
-
+        logger.info('Todo item updated', result)
         return result.Attributes as TodoItem
     }
 
@@ -80,6 +80,7 @@ export class TodosAccess {
                 userId
             }
         }).promise()
+        logger.info('Todo item deleted')
     }
 
     async updateTodoAttachment(todoId: string, userId: string, attachmentUrl: string): Promise<void> {

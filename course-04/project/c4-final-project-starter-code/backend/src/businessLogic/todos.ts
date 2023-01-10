@@ -16,6 +16,10 @@ export async function getAllTodos(userId: string): Promise<TodoItem[]> {
     return todosAccess.getAllTodos(userId)
 }
 
+export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
+    return todosAccess.getAllTodos(userId)
+}
+
 export async function createTodo(
     createTodoRequest: CreateTodoRequest,
     userId: string
@@ -65,4 +69,14 @@ export async function getTodo(
     userId: string
 ): Promise<TodoItem> {
     return todosAccess.getTodoItem(todoId, userId)
+}
+
+export async function createAttachmentPresignedUrl(
+    todoId: string,
+    userId: string
+): Promise<string> {
+    const attachmentUrl = await attachmentUtils.getAttachmentUrl(todoId)
+    await todosAccess.updateTodoAttachment(todoId, userId, attachmentUrl)
+    logger.info('Attachment URL generated', attachmentUrl)
+    return attachmentUtils.getUploadUrl(todoId)
 }
