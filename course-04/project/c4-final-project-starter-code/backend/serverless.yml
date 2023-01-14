@@ -26,9 +26,9 @@ provider:
   # Use these variables in the functions and resouorces section below. For example, 
   # ${self:provider.environment.ATTACHMENT_S3_BUCKET}
   environment:
-    TODOS_TABLE: serverless-c4-todo-app-${self:provider.stage}
+    TODOS_TABLE: serverless-todo-app-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: serverless-c4-todo-app-images-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: serverless-todo-app-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
     PROJECT_NAME: serverless-todo-app
     INDEX_NAME: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
@@ -69,6 +69,7 @@ functions:
       - http:
           path: /
           method: get
+          reqvalidatorName: RequestBodyValidator
           
 
   Auth:
@@ -80,16 +81,11 @@ functions:
     handler: src/lambda/http/getTodos.handler
     events:
       - http:
+          reqvalidatorName: RequestBodyValidator
           method: get
           path: todos
           cors: true
           authorizer: Auth
-          reqvalidatorName: RequestBodyValidator
-          documentation:
-            summary: Create a todo task
-            description: Create a todo task
-            requestModels:
-              application/json: CreateTodoRequest
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-get-todos-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -142,12 +138,6 @@ functions:
           cors: true
           authorizer: Auth
           reqvalidatorName: RequestBodyValidator
-          documentation:
-            summary: Update a todo task
-            description: Update a todo task
-            requestModels:
-              application/json: CreateTodoRequest
-
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -197,7 +187,7 @@ functions:
       - Effect: Allow
         Action:
           - s3:*
-        # Resource: arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
       - Effect: Allow
         Action:
           - dynamodb:Query
@@ -251,7 +241,6 @@ resources:
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.TODOS_TABLE}
         AttributeDefinitions:
           - AttributeName: userId
             AttributeType: S
@@ -265,6 +254,7 @@ resources:
           - AttributeName: todoId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
         LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.TODOS_CREATED_AT_INDEX}
             KeySchema:
