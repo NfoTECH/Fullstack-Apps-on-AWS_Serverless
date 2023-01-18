@@ -70,15 +70,7 @@ functions:
           path: /
           method: get
           reqvalidatorName: RequestBodyValidator
-      # - s3:
-      #     bucket: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
-      #     event: s3:ObjectCreated:*
-      #     rules:
-      #       - prefix: serverless/
-      #       - suffix: .zip .json
-      #     existing: true
           
-
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
