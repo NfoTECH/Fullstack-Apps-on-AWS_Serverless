@@ -5,6 +5,7 @@ import { CreateTodoRequest } from '../requests/CreateTodoRequest'
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest'
 import { createLogger } from '../utils/logger'
 import * as uuid from 'uuid'
+import { TodoUpdate } from '../models/TodoUpdate';
 // import * as createError from 'http-errors'
 
 // TODO: Implement businessLogic
@@ -41,9 +42,9 @@ export async function createTodo(
 
 export async function updateTodo(
     todoId: string,
-    userId: string,
-    updateTodoRequest: UpdateTodoRequest
-): Promise<TodoItem> {
+    updateTodoRequest: UpdateTodoRequest,
+    userId: string
+): Promise<TodoUpdate> {
     return todosAccess.updateTodoItem(todoId, userId, updateTodoRequest)
 }
 
